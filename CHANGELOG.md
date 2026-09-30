@@ -16,6 +16,8 @@
 
 ### Changed
 
+- Add direct regression coverage for missing snapshot jobs, missing retry parents,
+  and terminal parents without failed chains.
 - Add direct regression coverage for parent-run, failed-status, owner, active-state,
   and address deduplication filters in failed-chain retry wallet loading.
 - Add direct regression coverage for owner, group, active-state, and address
