@@ -101,6 +101,16 @@ def test_can_get_job_status(client):
     assert response.json()["status"] == "pending"
 
 
+def test_get_job_status_returns_not_found_for_missing_job(client):
+    response = client.get(
+        "/internal/snapshot-jobs/999",
+        headers={"X-Internal-Token": "test-token"},
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "job not found"}
+
+
 def test_can_create_group_job(client):
     response = client.post(
         "/internal/snapshot-jobs",
@@ -243,3 +253,34 @@ def test_retry_rejects_nonterminal_parent(client, db_session):
     )
 
     assert response.status_code == 409
+
+
+def test_retry_returns_not_found_for_missing_parent(client):
+    response = client.post(
+        "/internal/snapshot-jobs/999/retry-failed",
+        headers={"X-Internal-Token": "test-token"},
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "parent job not found"}
+
+
+def test_retry_rejects_terminal_parent_without_failed_chains(client, db_session):
+    parent = SnapshotRun(
+        user_id=1,
+        trigger_type="manual",
+        scope_type="all",
+        status="partial_success",
+        created_at=datetime.now(UTC),
+    )
+    db_session.add(parent)
+    db_session.commit()
+
+    response = client.post(
+        f"/internal/snapshot-jobs/{parent.id}/retry-failed",
+        headers={"X-Internal-Token": "test-token"},
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "parent job has no failed chains"}
+    assert db_session.query(SnapshotRun).count() == 1
