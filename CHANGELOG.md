@@ -16,6 +16,8 @@
 
 ### Changed
 
+- Add direct regression coverage for unexpected worker processing failures and
+  lease-loss handling without overwriting job ownership.
 - Add direct regression coverage for missing snapshot jobs, missing retry parents,
   and terminal parents without failed chains.
 - Add direct regression coverage for parent-run, failed-status, owner, active-state,
